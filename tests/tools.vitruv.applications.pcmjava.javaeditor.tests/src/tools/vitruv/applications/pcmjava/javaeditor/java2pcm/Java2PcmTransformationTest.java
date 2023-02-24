@@ -96,6 +96,7 @@ import tools.vitruv.applications.pcmjava.java2pcm.Java2PcmUserSelection;
 import tools.vitruv.applications.pcmjava.tests.pcm2java.Pcm2JavaTestUtils;
 import tools.vitruv.applications.util.temporary.java.JavaSetup;
 import tools.vitruv.change.atomic.id.IdResolver;
+import tools.vitruv.change.atomic.id.IdResolverFactory;
 import tools.vitruv.change.composite.description.VitruviusChange;
 import tools.vitruv.change.propagation.ChangePropagationMode;
 import tools.vitruv.framework.views.changederivation.DefaultStateBasedChangeResolutionStrategy;
@@ -147,8 +148,11 @@ public abstract class Java2PcmTransformationTest extends LegacyVitruvApplication
 	public static void setupJavaFactories() {
 		JavaSetup.prepareFactories();
 	}
-	
-	/** Hotfix to ignore layout information on reload, see https://github.com/vitruv-tools/Vitruv-Change/issues/49 */
+
+	/**
+	 * Hotfix to ignore layout information on reload, see
+	 * https://github.com/vitruv-tools/Vitruv-Change/issues/49
+	 */
 	@BeforeEach
 	void patchResourceSet() {
 		ResourceSet resourceSet = resourceAt(URI.createFileURI("dummy.temp")).getResourceSet();
@@ -259,8 +263,11 @@ public abstract class Java2PcmTransformationTest extends LegacyVitruvApplication
 			Resource currentResource = loadResourceIndependentFromView(modifiedResourceURI.getValue());
 			VitruviusChange change = changeResolutionStrategy.getChangeSequenceBetween(currentResource,
 					resourceAt(modifiedResourceURI.getKey()));
- 			record(resourceAt(modifiedResourceURI.getKey()).getResourceSet(),
- 					resourceSet -> change.resolveAndApply(IdResolver.create(resourceSet)));
+
+			record(resourceAt(modifiedResourceURI.getKey()).getResourceSet(), resourceSet -> {
+				IdResolver idResolver = IdResolverFactory.createHierarchicalIdResolver(resourceSet);
+				change.resolveAndApply(idResolver);
+			});
 		}
 		oldToNewURIsOfModifiedResources.clear();
 		propagate();
